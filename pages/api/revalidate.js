@@ -5,7 +5,15 @@ export default async function handler(req, res) {
   }
 
   try {
-    await res.revalidate("/");
+    console.log("Revalidating....");
+    await new Promise((resolveOuter) => {
+      resolveOuter(
+        new Promise((resolveInner) => {
+          setTimeout(resolveInner, 5000);
+        })
+      );
+    });
+    await res.revalidate("/isr-swr");
     return res.json({ revalidated: true });
   } catch (err) {
     // If there was an error, Next.js will continue
