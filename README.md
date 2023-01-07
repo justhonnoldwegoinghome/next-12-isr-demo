@@ -1,34 +1,33 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+## ISR
 
-## Getting Started
+- ISR based on calendar time
+- Add `revalidate=10` in `getStaticProps`
 
-First, run the development server:
+## On-demand ISR
 
-```bash
-npm run dev
-# or
-yarn dev
-```
+- ISR based on demand
+- Add Next API handler
+- Hit Next API endpoint to force revalidation
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## ISR + On-demand ISR
 
-You can start editing the page by modifying `pages/index.js`. The page auto-updates as you edit the file.
+- Possible to use both together
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.js`.
+## Questions
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
+### What if revalidation occurs faster than changes in DB?
 
-## Learn More
+- Say we trigger a revalidation after a POST request. When a POST request is made, we first make a (1) network request to our API and hence DB. Almost immediately, we make another (2) network request to our Next API which then makes yet another (3) network request to our API.
+- What if time taken for (1) happens to be more than time taken for (2) + (3)? This would waste the revalidation efforts since DB isn't updated yet.
 
-To learn more about Next.js, take a look at the following resources:
+## Tips
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### On-demand ISR + useSWR
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+- Say we trigger a revalidation after a POST request.
+- Say time taken for (1) is always less than time taken for (2) + (3)
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+- Using on-demand ISR alone: when a user makes a POST request, he/she doesn't get the fresh data until the page is refreshed.
+- To solve this, we can use useSWR together with on-demand ISR. When user makes a POST request, we use swr's `mutate` to instantly reflect the changes in DB. At the same time, we trigger a revalidation.
+- Example: https://github.com/joe-bell/example-next-isr-with-swr
+- Note that in the example, the author used SWR + normal ISR. Quite sure we can use SWR + on-demand ISR too.

@@ -1,5 +1,18 @@
 export default function Home({ joke }) {
-  return <div>{joke}</div>;
+  return (
+    <div>
+      <p>{joke}</p>
+      <button
+        onClick={() => {
+          fetch("/api/revalidate?secret=123")
+            .then((res) => res.json())
+            .then(console.log);
+        }}
+      >
+        On-demand ISR
+      </button>
+    </div>
+  );
 }
 
 export async function getStaticProps() {
